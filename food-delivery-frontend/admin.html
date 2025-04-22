@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Food Delivery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .orders-table th, .orders-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .orders-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .orders-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        .order-details {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .refresh-btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .refresh-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Dashboard</h1>
+        <button class="refresh-btn" onclick="loadOrders()">Refresh Orders</button>
+        <div id="ordersList"></div>
+    </div>
+
+    <script>
+        async function loadOrders() {
+            try {
+                // Fetch orders
+                const ordersResponse = await fetch('http://localhost:5001/api/orders');
+                const orders = await ordersResponse.json();
+
+                // Fetch users
+                const usersResponse = await fetch('http://localhost:5001/api/users');
+                const users = await usersResponse.json();
+
+                // Fetch order items
+                const orderItemsResponse = await fetch('http://localhost:5001/api/order-items');
+                const orderItems = await orderItemsResponse.json();
+
+                // Fetch menu items
+                const menuItemsResponse = await fetch('http://localhost:5001/api/menu');
+                const menuItems = await menuItemsResponse.json();
+
+                // Create a map of users by ID
+                const usersMap = users.reduce((map, user) => {
+                    map[user.id] = user;
+                    return map;
+                }, {});
+
+                // Create a map of menu items by ID
+                const menuItemsMap = menuItems.reduce((map, item) => {
+                    map[item.id] = item;
+                    return map;
+                }, {});
+
+                // Create a map of order items by order ID
+                const orderItemsMap = orderItems.reduce((map, item) => {
+                    if (!map[item.order_id]) {
+                        map[item.order_id] = [];
+                    }
+                    map[item.order_id].push(item);
+                    return map;
+                }, {});
+
+                // Generate HTML for orders
+                let html = `
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Contact</th>
+                                <th>Address</th>
+                                <th>Total Amount</th>
+                                <th>Date</th>
+                                <th>Items</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                orders.forEach(order => {
+                    const user = usersMap[order.user_id];
+                    const items = orderItemsMap[order.id] || [];
+                    
+                    html += `
+                        <tr>
+                            <td>${order.id}</td>
+                            <td>${user.name}</td>
+                            <td>${user.phone}<br>${user.email}</td>
+                            <td>${order.delivery_address}</td>
+                            <td>Rs ${order.total_amount}</td>
+                            <td>${new Date(order.created_at).toLocaleString()}</td>
+                            <td>
+                                <ul>
+                                    ${items.map(item => {
+                                        const menuItem = menuItemsMap[item.menu_item_id];
+                                        return `<li>${menuItem.name} x ${item.quantity} = Rs ${item.price * item.quantity}</li>`;
+                                    }).join('')}
+                                </ul>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('ordersList').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                document.getElementById('ordersList').innerHTML = '<p>Error loading orders. Please try again.</p>';
+            }
+        }
+
+        // Load orders when page loads
+        document.addEventListener('DOMContentLoaded', loadOrders);
+    </script>
+</body>
+</html> 
