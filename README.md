@@ -78,3 +78,14 @@ npm start
 This project is licensed under the MIT License.
 
 ---
+## 🔗 Live Links
+
+- **GitHub Repository**: [https://github.com/lhemalatha/food-delivery-app](## 🔗 Live Links
+
+- **GitHub Repository**: [https://github.com/lhemalatha/food-delivery-app](https://github.com/lhemalatha/food-delivery-app)
+- **Live Website**: _coming soon_
+- **Play Store / App Store**: _coming soon_
+)
+- **Live Website**: _coming soon_
+- **Play Store / App Store**: _coming soon_
+
